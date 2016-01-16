@@ -20,19 +20,13 @@ class RemoteServer extends Actor {
 
     case Ping(value) =>
       debug("Received PING " + value)
-      if (m == value) {
-        debug("Regenerate lost PONG, sending to next")
-        next ! Pong(-value)
-      }
+      if (m == value) restorePong(value)
       forwardPing(value)
       context.become(receive(value))
 
     case Pong(value) =>
       debug("Received PONG "+value)
-      if (m == value) {
-        debug("Regenerate lost PING and forward it")
-        next ! Ping(-value)
-      }
+      if (m == value) restorePing(value)
       forwardPong(value)
       context.become(receive(value))
 
@@ -45,9 +39,7 @@ class RemoteServer extends Actor {
 
     case Ping(value) =>
       debug("Received PING "+value)
-      if (m == value)
-        debug("Regenerate lost PONG and forward it")
-        next ! Pong(-value)
+      if (m == value) restorePong(value)
       debug("Entering critical section")
       sender ! CsResponse()
       context.become(receiveInCs(value))
@@ -56,8 +48,9 @@ class RemoteServer extends Actor {
       debug("Received PONG "+value)
       if (m == value) {
         val newVal = value - 1
-        debug("Regenerate lost PING and Entering critical section")
-        debug("Meeting PING and PONG, increasing value")
+        debug("Regenerate lost PING")
+        debug("Entering critical section")
+        debug("Meeting PING and PONG - increasing value")
         sender ! CsResponse()
         context.become(receiveInCs(newVal))
         forwardPong(newVal)
@@ -71,9 +64,9 @@ class RemoteServer extends Actor {
 
     case Pong (value) =>
       debug("Received PONG "+value)
-      debug("Meeting PING and PONG, increasing value")
+      debug("Meeting PING and PONG - increasing value")
       val newVal = value - 1
-      forwardPong(value)
+      forwardPong(newVal)
       context.become(receiveInCs(newVal))
 
     case CsRelease() =>
@@ -85,23 +78,35 @@ class RemoteServer extends Actor {
   }
 
   def forwardPing(value: Int) = {
-    Thread.sleep(200)
-    if (pingloss && r.nextInt(10) < 3) {
-      debug("PING lost...")
-    } else {
+    Thread.sleep(2000)
+    if (pingloss && r.nextInt(10) < 3) debug("PING lost...")
+    else {
       debug("Forward PING " + value)
       next ! Ping(value)
     }
   }
 
   def forwardPong(value: Int) = {
-    Thread.sleep(200)
-    if (pongloss && r.nextInt(10) < 3) {
-      debug("PONG lost...")
-    } else {
+    Thread.sleep(2000)
+    if (pongloss && r.nextInt(10) < 3) debug("PONG lost...")
+    else {
       debug("Forward PONG " + value)
       next ! Pong(value)
     }
+  }
+
+  def restorePing(value: Int) = {
+    val newVal = -value
+    debug("Regenerate lost PING")
+    debug("Forward PING " + newVal)
+    next ! Ping(newVal)
+  }
+
+  def restorePong(value: Int) = {
+    val newVal = -value
+    debug("Regenerate lost PONG")
+    debug("Forward PONG " + newVal)
+    next ! Pong(newVal)
   }
 
 }

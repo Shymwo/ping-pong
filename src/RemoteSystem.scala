@@ -21,11 +21,11 @@ object RemoteSystem extends App  {
   }
 
   while (true) {
-    Thread.sleep(r.nextInt(10)*1000)
+    Thread.sleep(r.nextInt(10)*10000)
     val req = actor ? CsRequest()
     Await.result(req, Duration.Inf)
     //critical section
-    Thread.sleep(r.nextInt(10)*500)
+    Thread.sleep(r.nextInt(10)*5000)
     actor ! CsRelease()
   }
 
