@@ -1,0 +1,5 @@
+case class Ping(value: Int)
+case class Pong(value: Int)
+case class CsRequest()
+case class CsResponse()
+case class CsRelease()
