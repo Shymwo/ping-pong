@@ -1,3 +1,6 @@
+import java.text.SimpleDateFormat
+import java.util.Calendar
+
 import akka.actor._
 import com.typesafe.config._
 
@@ -9,10 +12,11 @@ class RemoteServer extends Actor {
   val DEBUG = conf.getBoolean("sw.debug")
   val pingloss = conf.getBoolean("sw.pingloss")
   val pongloss = conf.getBoolean("sw.pongloss")
+  val timeFormat = new SimpleDateFormat("k:mm:ss")
 
   context.become(receive(0))
 
-  def debug(s: String) = if (DEBUG) println(s)
+  def debug(s: String) = if (DEBUG) println(timeFormat.format(Calendar.getInstance().getTime)+": "+s)
 
   def receive = {case _ =>}
 
