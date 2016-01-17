@@ -10,9 +10,10 @@ class RemoteServer extends Actor {
   val next = context.system.actorSelection(conf.getString("sw.next"))
   val r = scala.util.Random
   val DEBUG = conf.getBoolean("sw.debug")
-  val pingloss = conf.getBoolean("sw.pingloss")
-  val pongloss = conf.getBoolean("sw.pongloss")
+  val pingLoss = conf.getBoolean("sw.pingLoss")
+  val pongLoss = conf.getBoolean("sw.pongLoss")
   val timeFormat = new SimpleDateFormat("k:mm:ss")
+  val forwardTimeout = conf.getInt("sw.forwardTimeout")
 
   context.become(receive(0))
 
@@ -82,8 +83,8 @@ class RemoteServer extends Actor {
   }
 
   def forwardPing(value: Int) = {
-    Thread.sleep(2000)
-    if (pingloss && r.nextInt(10) < 3) debug("PING lost...")
+    Thread.sleep(forwardTimeout)
+    if (pingLoss && r.nextInt(10) < 3) debug("PING lost...")
     else {
       debug("Forward PING " + value)
       next ! Ping(value)
@@ -91,8 +92,8 @@ class RemoteServer extends Actor {
   }
 
   def forwardPong(value: Int) = {
-    Thread.sleep(2000)
-    if (pongloss && r.nextInt(10) < 3) debug("PONG lost...")
+    Thread.sleep(forwardTimeout)
+    if (pongLoss && r.nextInt(10) < 3) debug("PONG lost...")
     else {
       debug("Forward PONG " + value)
       next ! Pong(value)
